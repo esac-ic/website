@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\repositories\PhotoAlbumRepository;
 use App\repositories\RepositorieFactory;
 
 class PhotoController extends Controller
@@ -14,7 +13,8 @@ class PhotoController extends Controller
     public function __construct(RepositorieFactory $repositorieFactory){
         $this->_PhotoAlbumRepository = $repositorieFactory->getRepositorie(RepositorieFactory::$PHOTOALBUMREPOKEY);
         $this->_PhotoRepository = $repositorieFactory->getRepositorie(RepositorieFactory::$PHOTOREPOKEY);
-        $this->middleware('auth');
+        $this->middleware('auth')->except(['apiAddAlbum', 'apiAddPhotoToAlbum']);
+        $this->middleware('api_token')->only(['apiAddAlbum', 'apiAddPhotoToAlbum']);
     }
 
     public function index($id)
@@ -68,6 +68,16 @@ class PhotoController extends Controller
             }                        
         }
         return redirect()->route('PhotoAlbum', ['albumId' => $ablumId]);
+    }
+
+    public function apiAddAlbum(Request $request)
+    {
+        return $this->addAlbum($request);
+    }
+
+    public function apiAddPhotoToAlbum(Request $request, $albumId)
+    {
+        return $this->addPhotoToAlbum($request, $albumId);
     }
 
     public function savePhoto($image, $photoAlbum, $thumbnail, $fileExtension){

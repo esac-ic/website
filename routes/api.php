@@ -28,3 +28,6 @@ Route::post('/subzekering','Api\ZekeringController@storeSubZekering');
 Route::delete('/zekeringen/{id}', 'Api\ZekeringController@destroy');
 
 Route::get('/user/registrations','Api\RegistrationController@registrationsByUser');
+
+Route::post('/photoalbums/{albumId}', 'PhotoController@apiAddPhotoToAlbum');
+Route::post('/photoalbums','PhotoController@apiAddAlbum');

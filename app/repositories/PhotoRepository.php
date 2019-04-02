@@ -19,7 +19,7 @@ class PhotoRepository implements IRepository
     {
         $photo = new Photo();
         $photo->photo_album()->associate($data["album"]);
-        $photo->user()->associate(Auth::user()->id);
+        $photo->user()->associate(Auth::guest() ? 1 : Auth::user()->id); // Api requests don't have a session.
         $photo->save();
         return $photo;
     }

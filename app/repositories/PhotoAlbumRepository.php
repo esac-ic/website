@@ -23,7 +23,7 @@ class PhotoAlbumRepository implements IRepository
         $album->title = $data["title"];
         $album->description = $data["description"];
         $album->date = Carbon::parse($data["date"]);
-        $album->user()->associate(Auth::user()->id);
+        $album->user()->associate(Auth::guest() ? 1 : Auth::user()->id); // Api requests don't have a session.
         $album->save();
         return $album;
     }
