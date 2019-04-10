@@ -46,6 +46,10 @@
                 </div>
             </div>
             <div class="form-group">
+                {!! Form::label('sticky_until', trans('NewsItem.sticky')) !!}
+                {!! Form::date('sticky_until', $newsItem ? $newsItem->sticky_until : "", ['class' => 'form-control']) !!}
+            </div>
+            <div class="form-group">
                 {{Form::label('content_nl',  trans('NewsItem.textNl'))}}
                 {{Form::textarea('NL_text',($newsItem != null) ? $newsItem->newsItemText->NL_text : "",array('class' => 'form-control', 'id' => 'content_nl'))}}
             </div>

@@ -74,7 +74,16 @@ class NewsItemRepository implements IRepository
         return NewsItem::all($columns);
     }
 
+    public function getLastPaginated($pageSize) {
+        return NewsItem::orderSticky()
+            ->orderBy('id', 'desc')
+            ->paginate($pageSize);
+    }
+
     public function getLastXNewsItems( $limit){
-        return NewsItem::orderBy('id', 'desc')->take($limit)->get();
+        return NewsItem::orderSticky()
+            ->orderBy('id', 'desc')
+            ->take($limit)
+            ->get();
     }
 }

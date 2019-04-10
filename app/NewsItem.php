@@ -13,7 +13,8 @@ class NewsItem extends Model
         'text',
         'image_url',
         'thumbnail_url',
-        'author'
+        'author',
+        'sticky_until',
     ];
 
     public function newsItemText(){
@@ -40,5 +41,16 @@ class NewsItem extends Model
             return "/img/header-3.jpg";
         }
 
+    }
+
+    /**
+     * Applies an ordering where sticky elements are on top, given that they have not yet expired.
+     * Sticky posts themselves are ordered indeterminately as to allow a later order rule to order them correctly.
+     *
+     * @param $query
+     * @return mixed
+     */
+    public function scopeOrderSticky($query){
+        return $query->orderByRaw('IF(`sticky_until` IS NULL OR `sticky_until` < NOW(), 1, 0)');
     }
 }

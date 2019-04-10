@@ -84,7 +84,7 @@ class frontEndController extends Controller
     }
 
     public function news(){
-        $newsItems = NewsItem::orderBy('id', 'desc')->paginate(9);
+        $newsItems = $this->_newsItemRepository->getLastPaginated(9);
         $curPageName = trans('front-end/news.title');
         $menuItem = $this->_MenuItemRepository->findby('urlName',MenuItem::NEWSURL);
         $content = $menuItem->content->text();
