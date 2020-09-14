@@ -1,5 +1,4 @@
 var PhotoSwipeItems = []; // Contains the photos used by photoswipe.
-
 try {
     var currentPhotoAlbum = photoAlbum.id;
     for (var photo in photos) {
@@ -7,7 +6,7 @@ try {
     }
 }
 catch(err) {
-
+    console.log(err);
 }
 finally{
     $("p#albumDesciption").text($("p#albumDesciption").text().replace(/\n/g, "<br>"));
@@ -24,7 +23,6 @@ function openGallery(index) {
     gallery.init();
 }
 
-
 var files;
 var albumName;
 var albumDescription = "";
@@ -37,105 +35,57 @@ function uploadPhotos() {
 
     //check if albumname, description and date exists.
     if(albumNameInput  && albumDescriptionInput && captureDateInput){
-        //check if input of the albumname,description and date are correct.
-        if(albumNameInput.checkValidity() && albumDescriptionInput.checkValidity() && captureDateInput.checkValidity()){
-            albumName = albumNameInput.value;
-            albumDescription = albumDescriptionInput.value;
-            captureDate = captureDateInput.value;
-            var justPhoto = (albumName === undefined || albumDescription === undefined);
-
-            //check if albumname, description is not empty and not exceed 250 characters.
-            if(!justPhoto && (albumName.length >= 250 || albumDescription.length >= 250)) {
-                alert("The album name and description have to consist of less than 250 characters.");
-                return;
-            }
-        } else return;
+        albumName = albumNameInput.value;
+        albumDescription = albumDescriptionInput.value;
+        captureDate = captureDateInput.value;
+        //check if albumname, description is not empty and not exceed 250 characters.
+        if(albumName.length >= 250 || albumDescription.length >= 250) {
+            alert("The album name and description have to consist of less than 250 characters.");
+            return;
+        }
     }
-
     //check if selectedfile input is valid (not null)
     if(fileInput.checkValidity()){
         files = Array.from(fileInput.files);
         numberOfPhotos = files.length;
         updateProgressBar(); //show progressbar
-        processPhotos(); //start processing photos
-    } else alert("Selecteer een aantal foto's om toe te voegen.");
+        processPhotos(0); //start processing photos
+    }
 }
 
 
-var fileIndex = 0; //fileIndex of the files array, needs to be global because its a recursive function.
 //recusrive function the process photos.
-function processPhotos(){
+function processPhotos(fileIndex){
     ChangebuttonState("Uploading photos...");
-    resizeThumbnail(files[fileIndex]).then(function({thumbnail, file}){
-        downscalePhoto(file).then(function({photo, file}){
+    resizeImage(files[fileIndex], 356, 356, 0.5).then(function(thumbnail){
+        downscaleImage(files[fileIndex], 0.5).then(function(photo){
+            if(fileIndex != 0){
+                processPhotos((fileIndex + 1));
+            }
             if (currentPhotoAlbum != undefined) { //if currentAlbum is undefined then it means that we are adding an album.
                 addPhotoToAlbum(thumbnail, photo, fileIndex).then(function(index){
+                    if(index == 0){
+                        processPhotos((fileIndex + 1));
+                    }
                     if(index >= (files.length -1)){ //if returned index equals files length then last photo has uploaded. refresh page
                         location.reload();
                     } else{
                         updateProgressBar();
                     }
                 });
-                fileIndex++; //increase Fileindex for next recurse
-                processPhotos();
             } else{
-                addAlbum(thumbnail, photo, albumName, albumDescription, captureDate, fileIndex).then(function(index){
+                createAlbum(thumbnail, photo, albumName, albumDescription, captureDate, fileIndex).then(function(index){
+                    if(index == 0){
+                        processPhotos((fileIndex + 1));
+                    }
                     if(index >= (files.length -1)){ //if returned index equals files length then last photo has uploaded. refresh page
                         location.reload();
                     } else{
                         updateProgressBar();
-                        fileIndex++; //increase Fileindex for next recurse
-                        processPhotos();
                     }
                 });
             }
         });
-    });
-
-}
-
-
-//Downscales the original photo to a smaller size
-//file: Photo to downscale
-function downscalePhoto(file) {
-    return new Promise(function (resolve, reject) {
-        loadImage(file,
-            function(canvas){
-                canvas.toBlob(function (blob) {
-                        resolve({photo: blob, file: file});
-                    }, 'image/jpeg', 0.5
-                );
-            },
-            {
-                canvas: true,
-                orientation: true,
-                downsamplingRatio: 0.2
-            }
-        );
-    });
-}
-
-//Resizes the original photo to a thumbnail
-//file: Photo to resize
-function resizeThumbnail(file) {
-    return new Promise(function (resolve, reject) {
-        loadImage(file,
-            function(canvas){
-                canvas.toBlob(function (blob) {
-                        resolve({thumbnail: blob, file: file});
-                    }, 'image/jpeg', 0.5
-                );
-            },
-            {
-            maxWidth: 354,
-            maxHeight: 354,
-            minWidth: 354,
-            minHeight: 354,
-            crop: true,
-            canvas: true,
-            orientation: true
-            }
-        );
     });
 }
 
@@ -146,7 +96,7 @@ function resizeThumbnail(file) {
 //albumdescription: description of album that will be created
 //captureDate: Capture date of the photos
 //fileIndex: fileIndex of current photo (This is given to ensure to reload after last photo)
-function addAlbum(thumbnail, photo, albumName, albumDescription, captureDate, fileIndex) {
+function createAlbum(thumbnail, photo, albumName, albumDescription, captureDate, fileIndex) {
     return new Promise(function (resolve, reject) {
         var type = "POST";
         var formData = new FormData();
@@ -181,6 +131,7 @@ function addAlbum(thumbnail, photo, albumName, albumDescription, captureDate, fi
 function addPhotoToAlbum(thumbnail, photo, fileIndex){
     return new Promise(function (resolve, reject) {
         var formData = new FormData();
+        formData.append('fileName', files[fileIndex].name)
         formData.append('thumbnails[]',thumbnail);
         formData.append('photos[]', photo);
 
